@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Board - Atlas & Clement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .board {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .column {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .column-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .column-count {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .column-todo .column-title { color: #4a5568; }
+        .column-progress .column-title { color: #3182ce; }
+        .column-review .column-title { color: #d69e2e; }
+        .column-done .column-title { color: #38a169; }
+        
+        .task {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: grab;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        
+        .task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .task.dragging {
+            opacity: 0.5;
+        }
+        
+        .task-title {
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .task-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .task-assignee {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+        
+        .assignee-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .assignee-clement {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .assignee-atlas {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .task-priority {
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .priority-high {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .priority-medium {
+            background: #feebc8;
+            color: #c05621;
+        }
+        
+        .priority-low {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        
+        .task-date {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 8px;
+        }
+        
+        .add-task-btn {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #cbd5e0;
+            background: transparent;
+            border-radius: 8px;
+            color: #718096;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-task-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f7fafc;
+        }
+        
+        .legend {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .last-updated {
+            text-align: center;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 Task Board</h1>
+        <p>Atlas & Clement's Project Tracker</p>
+        
+        <div class="header-stats">
+            <div class="stat">
+                <div class="stat-value" id="totalTasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="completedTasks">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="atlasTasks">0</div>
+                <div class="stat-label">Atlas Tasks</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="clementTasks">0</div>
+                <div class="stat-label">Clement Tasks</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="board">
+        <!-- To Do Column -->
+        <div class="column column-todo" data-status="todo">
+            <div class="column-header">
+                <span class="column-title">📝 To Do</span>
+                <span class="column-count">0</span>
+            </div>
+            <div class="tasks-container" id="todoTasks">
+                <!-- Tasks will be loaded here -->
+            </div>
+            
+            <button class="add-task-btn" onclick="showAddTaskModal('todo')">+ Add Task</button>
+        </div>
+        
+        <!-- In Progress Column -->
+        <div class="column column-progress" data-status="progress">
+            <div class="column-header">
+                <span class="column-title">🚀 In Progress</span>
+                <span class="column-count">0</span>
+            </div>
+            
+            <div class="tasks-container" id="progressTasks">
+                <!-- Tasks will be loaded here -->
+            </div>
+            
+            <button class="add-task-btn" onclick="showAddTaskModal('progress')">+ Add Task</button>
+        </div>
+        
+        <!-- Review Column -->
+        <div class="column column-review" data-status="review">
+            <div class="column-header">
+                <span class="column-title">👀 Review</span>
+                <span class="column-count">0</span>
+            </div>
+            
+            <div class="tasks-container" id="reviewTasks">
+                <!-- Tasks will be loaded here -->
+            </div>
+            
+            <button class="add-task-btn" onclick="showAddTaskModal('review')">+ Add Task</button>
+        </div>
+        
+        <!-- Done Column -->
+        <div class="column column-done" data-status="done">
+            <div class="column-header">
+                <span class="column-title">✅ Done</span>
+                <span class="column-count">0</span>
+            </div>
+            
+            <div class="tasks-container" id="doneTasks">
+                <!-- Tasks will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="assignee-avatar assignee-clement">C</div>
+            <span>Clement</span>
+        </div>
+        <div class="legend-item">
+            <div class="assignee-avatar assignee-atlas">A</div>
+            <span>Atlas</span>
+        </div>
+        <div class="legend-item">
+            <span class="task-priority priority-high">High</span>
+        </div>
+        <div class="legend-item">
+            <span class="task-priority priority-medium">Medium</span>
+        </div>
+        <div class="legend-item">
+            <span class="task-priority priority-low">Low</span>
+        </div>
+    </div>
+    
+    <div class="last-updated">
+        Last updated: <span id="lastUpdated">--</span>
+    </div>
+    
+    <script>
+        // Initial tasks data
+        let tasks = [
+            {
+                id: 1,
+                title: "Create Task Board system",
+                assignee: "atlas",
+                priority: "high",
+                status: "done",
+                created: "2024-02-20",
+                updated: "2024-02-20"
+            },
+            {
+                id: 2,
+                title: "Review and prioritize projects",
+                assignee: "clement",
+                priority: "medium",
+                status: "todo",
+                created: "2024-02-20",
+                updated: "2024-02-20"
+            }
+        ];
+        
+        function renderTasks() {
+            const columns = {
+                todo: document.getElementById('todoTasks'),
+                progress: document.getElementById('progressTasks'),
+                review: document.getElementById('reviewTasks'),
+                done: document.getElementById('doneTasks')
+            };
+            
+            // Clear all columns
+            Object.values(columns).forEach(col => col.innerHTML = '');
+            
+            // Count stats
+            let stats = {
+                total: tasks.length,
+                done: 0,
+                atlas: 0,
+                clement: 0
+            };
+            
+            // Render tasks
+            tasks.forEach(task => {
+                const taskEl = createTaskElement(task);
+                columns[task.status].appendChild(taskEl);
+                
+                // Update stats
+                if (task.status === 'done') stats.done++;
+                if (task.assignee === 'atlas') stats.atlas++;
+                if (task.assignee === 'clement') stats.clement++;
+            });
+            
+            // Update counts
+            document.querySelectorAll('.column-count').forEach((el, i) => {
+                const status = ['todo', 'progress', 'review', 'done'][i];
+                el.textContent = tasks.filter(t => t.status === status).length;
+            });
+            
+            // Update stats
+            document.getElementById('totalTasks').textContent = stats.total;
+            document.getElementById('completedTasks').textContent = stats.done;
+            document.getElementById('atlasTasks').textContent = stats.atlas;
+            document.getElementById('clementTasks').textContent = stats.clement;
+            
+            // Update timestamp
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+        }
+        
+        function createTaskElement(task) {
+            const div = document.createElement('div');
+            div.className = 'task';
+            div.draggable = true;
+            div.dataset.id = task.id;
+            
+            const assigneeClass = task.assignee === 'clement' ? 'assignee-clement' : 'assignee-atlas';
+            const assigneeLabel = task.assignee === 'clement' ? 'C' : 'A';
+            const priorityClass = `priority-${task.priority}`;
+            
+            div.innerHTML = `
+                <div class="task-title">${task.title}</div>
+                <div class="task-meta">
+                    <div class="task-assignee">
+                        <div class="assignee-avatar ${assigneeClass}">${assigneeLabel}</div>
+                        <span>${task.assignee === 'clement' ? 'Clement' : 'Atlas'}</span>
+                    </div>
+                    <span class="task-priority ${priorityClass}">${task.priority}</span>
+                </div>
+                <div class="task-date">${task.updated}</div>
+            `;
+            
+            // Drag events
+            div.addEventListener('dragstart', handleDragStart);
+            div.addEventListener('dragend', handleDragEnd);
+            
+            return div;
+        }
+        
+        function handleDragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.id);
+        }
+        
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        // Drop zones
+        document.querySelectorAll('.column').forEach(column => {
+            column.addEventListener('dragover', e => {
+                e.preventDefault();
+            });
+            
+            column.addEventListener('drop', e => {
+                e.preventDefault();
+                const taskId = parseInt(e.dataTransfer.getData('text/plain'));
+                const newStatus = column.dataset.status;
+                
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.status = newStatus;
+                    task.updated = new Date().toISOString().split('T')[0];
+                    renderTasks();
+                }
+            });
+        });
+        
+        function showAddTaskModal(status) {
+            const title = prompt('Task title:');
+            if (!title) return;
+            
+            const assignee = prompt('Assign to (clement/atlas):', 'atlas');
+            const priority = prompt('Priority (high/medium/low):', 'medium');
+            
+            const newTask = {
+                id: Date.now(),
+                title: title,
+                assignee: assignee === 'clement' ? 'clement' : 'atlas',
+                priority: ['high', 'medium', 'low'].includes(priority) ? priority : 'medium',
+                status: status,
+                created: new Date().toISOString().split('T')[0],
+                updated: new Date().toISOString().split('T')[0]
+            };
+            
+            tasks.push(newTask);
+            renderTasks();
+        }
+        
+        // Initial render
+        renderTasks();
+    </script>
+</body>
+</html>
